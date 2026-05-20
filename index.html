@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Physics PUE — MAS101 | obsidianghost404</title>
+<link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --glass: rgba(255,255,255,0.08);
+    --glass-border: rgba(255,255,255,0.15);
+    --glass-hover: rgba(255,255,255,0.13);
+    --accent: #0af;
+    --accent2: #a78bfa;
+    --accent3: #34d399;
+    --text: #f0f4ff;
+    --muted: rgba(240,244,255,0.5);
+    --blur: blur(20px);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: #030712;
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BG ── */
+  .bg-orbs {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
+  .orb {
+    position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.18;
+    animation: drift 12s ease-in-out infinite alternate;
+  }
+  .orb1 { width:500px; height:500px; background:#0af; top:-120px; left:-100px; animation-delay:0s; }
+  .orb2 { width:400px; height:400px; background:#a78bfa; bottom:-100px; right:-80px; animation-delay:3s; }
+  .orb3 { width:350px; height:350px; background:#34d399; top:40%; left:60%; animation-delay:6s; }
+  .orb4 { width:250px; height:250px; background:#f59e0b; top:25%; right:5%; animation-delay:2s; }
+
+  @keyframes drift {
+    from { transform: translate(0,0) scale(1); }
+    to   { transform: translate(30px,40px) scale(1.1); }
+  }
+
+  /* ── LAYOUT ── */
+  .container { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ── GLASS ── */
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border-radius: 20px;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 80px 20px 50px;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(10,170,255,0.12);
+    border: 1px solid rgba(10,170,255,0.25);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 6vw, 3.8rem);
+    font-weight: 700;
+    line-height: 1.15;
+    background: linear-gradient(135deg, #fff 0%, #a78bfa 50%, #0af 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: fadeUp 0.7s ease 0.1s both;
+  }
+  .hero-sub {
+    margin-top: 16px;
+    font-size: 1.05rem;
+    color: var(--muted);
+    animation: fadeUp 0.7s ease 0.2s both;
+  }
+  .hero-tags {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+    margin-top: 24px;
+    animation: fadeUp 0.7s ease 0.3s both;
+  }
+  .tag {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .score-card {
+    display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;
+    margin: 36px 0 0;
+    animation: fadeUp 0.7s ease 0.4s both;
+  }
+  .score-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 18px 28px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s, background 0.2s;
+  }
+  .score-item:hover { transform: translateY(-4px); background: rgba(255,255,255,0.09); }
+  .score-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #0af, #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .score-label { font-size: 11px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex; align-items: center; gap: 12px;
+    margin: 50px 0 20px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .section-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .icon-blue { background: rgba(10,170,255,0.15); }
+  .icon-purple { background: rgba(167,139,250,0.15); }
+  .icon-green { background: rgba(52,211,153,0.15); }
+  .icon-amber { background: rgba(245,158,11,0.15); }
+  .icon-pink { background: rgba(236,72,153,0.15); }
+
+  .section-title { font-size: 1.35rem; font-weight: 600; }
+  .section-subtitle { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border-radius: 18px;
+    margin-bottom: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+    animation: fadeUp 0.5s ease both;
+  }
+  .card:hover { border-color: rgba(255,255,255,0.25); transform: translateY(-2px); }
+
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 22px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .card-title-wrap { display: flex; align-items: center; gap: 12px; }
+  .card-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(10,170,255,0.1);
+    border: 1px solid rgba(10,170,255,0.2);
+    border-radius: 6px;
+    padding: 2px 8px;
+    flex-shrink: 0;
+  }
+  .card-q { font-size: 0.95rem; font-weight: 500; line-height: 1.4; }
+  .card-marks {
+    font-size: 11px; font-weight: 600;
+    color: var(--accent3);
+    background: rgba(52,211,153,0.1);
+    border: 1px solid rgba(52,211,153,0.2);
+    border-radius: 100px;
+    padding: 3px 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .chevron {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+    margin-left: 10px;
+  }
+  .card.open .chevron { transform: rotate(180deg); }
+
+  .card-body {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), padding 0.3s;
+    padding: 0 22px;
+  }
+  .card.open .card-body { max-height: 2000px; padding: 0 22px 22px; }
+
+  .answer-text {
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: rgba(240,244,255,0.85);
+  }
+  .answer-text p { margin-bottom: 10px; }
+  .answer-text ul { padding-left: 18px; margin-bottom: 10px; }
+  .answer-text li { margin-bottom: 5px; }
+
+  .formula-box {
+    background: rgba(10,170,255,0.07);
+    border: 1px solid rgba(10,170,255,0.18);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: #7dd3fc;
+    margin: 12px 0;
+    overflow-x: auto;
+  }
+
+  .tip-box {
+    background: rgba(167,139,250,0.08);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-left: 3px solid #a78bfa;
+    border-radius: 0 12px 12px 0;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    color: rgba(240,244,255,0.75);
+    margin: 12px 0;
+  }
+  .tip-box strong { color: #a78bfa; }
+
+  .hinglish-box {
+    background: rgba(52,211,153,0.06);
+    border: 1px solid rgba(52,211,153,0.15);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 0.82rem;
+    color: rgba(52,211,153,0.9);
+    margin: 10px 0;
+  }
+  .hinglish-box::before { content: "💬 "; }
+
+  .divider-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    margin: 8px 0;
+  }
+
+  /* ── STRATEGY TABLE ── */
+  .strat-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin-top: 10px;
+  }
+  .strat-table th {
+    text-align: left;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.06);
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .strat-table td {
+    padding: 10px 14px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    color: rgba(240,244,255,0.8);
+    vertical-align: top;
+  }
+  .strat-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+  /* ── UNIT PILL ── */
+  .unit-pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 9px;
+    border-radius: 100px;
+    margin-right: 6px;
+  }
+  .u1 { background: rgba(10,170,255,0.15); color: #7dd3fc; }
+  .u2 { background: rgba(167,139,250,0.15); color: #c4b5fd; }
+  .u3 { background: rgba(52,211,153,0.15); color: #6ee7b7; }
+  .u4 { background: rgba(245,158,11,0.15); color: #fcd34d; }
+  .u5 { background: rgba(236,72,153,0.15); color: #f9a8d4; }
+
+  /* ── TIPS GRID ── */
+  .tips-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 16px; }
+  @media(max-width:600px) { .tips-grid { grid-template-columns: 1fr; } }
+
+  .tip-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    padding: 18px;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+  .tip-card:hover { transform: translateY(-3px); }
+  .tip-card .tip-icon { font-size: 2rem; margin-bottom: 10px; }
+  .tip-card .tip-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
+  .tip-card .tip-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 0.82rem;
+    position: relative; z-index: 1;
+  }
+  footer .made-by {
+    font-weight: 600;
+    background: linear-gradient(135deg, #a78bfa, #0af);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* stagger cards */
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.10s; }
+  .card:nth-child(3) { animation-delay: 0.15s; }
+  .card:nth-child(4) { animation-delay: 0.20s; }
+  .card:nth-child(5) { animation-delay: 0.25s; }
+  .card:nth-child(6) { animation-delay: 0.30s; }
+  .card:nth-child(7) { animation-delay: 0.35s; }
+  .card:nth-child(8) { animation-delay: 0.40s; }
+
+  .progress-bar-wrap {
+    height: 4px; border-radius: 100px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden; margin-top: 6px;
+  }
+  .progress-bar {
+    height: 100%; border-radius: 100px;
+    background: linear-gradient(90deg, #0af, #a78bfa);
+    transition: width 1s ease;
+  }
+
+  .pattern-exam {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 12px;
+    margin-top: 16px;
+  }
+  @media(max-width:500px) { .pattern-exam { grid-template-columns: 1fr; } }
+  .pattern-cell {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 14px;
+    padding: 16px;
+    text-align: center;
+  }
+  .pattern-cell .ptype { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+  .pattern-cell .pmarks {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.6rem; font-weight: 700;
+    background: linear-gradient(135deg, #0af, #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .pattern-cell .pdesc { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="orb orb4"></div>
+</div>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">⚡ PUE Exam Guide 2025-26</div>
+    <h1>Engineering Physics<br>Most Important Qs</h1>
+    <p class="hero-sub">MAS101 / MAS201 &nbsp;·&nbsp; B.Tech Semester I &nbsp;·&nbsp; MIET<br>
+    <span style="color:#34d399; font-weight:600;">Bhai tension mat le</span> — ye padhle, 50+ pakka! 🎯</p>
+    <div class="hero-tags">
+      <span class="tag">Relativity</span>
+      <span class="tag">Quantum Mechanics</span>
+      <span class="tag">Optics</span>
+      <span class="tag">Lasers & Fibers</span>
+      <span class="tag">Superconductors</span>
+      <span class="tag">Nanomaterials</span>
+    </div>
+    <div class="score-card">
+      <div class="score-item">
+        <div class="score-num">70</div>
+        <div class="score-label">Total Marks</div>
+      </div>
+      <div class="score-item">
+        <div class="score-num">50+</div>
+        <div class="score-label">Target Score</div>
+      </div>
+      <div class="score-item">
+        <div class="score-num">5</div>
+        <div class="score-label">Units</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXAM PATTERN -->
+  <div class="section-header">
+    <div class="section-icon icon-blue">📋</div>
+    <div>
+      <div class="section-title">Exam Pattern</div>
+      <div class="section-subtitle">Bhai pehle ye samajh le — tabhi strategy banegi</div>
+    </div>
+  </div>
+  <div class="glass" style="padding:20px;">
+    <div class="pattern-exam">
+      <div class="pattern-cell">
+        <div class="ptype">Section A</div>
+        <div class="pmarks">10</div>
+        <div class="pdesc">5 × 2 marks<br>Short answers (3-4 lines)</div>
+      </div>
+      <div class="pattern-cell">
+        <div class="ptype">Section B</div>
+        <div class="pmarks">20</div>
+        <div class="pdesc">4 × 5 marks<br>1 from each unit</div>
+      </div>
+      <div class="pattern-cell">
+        <div class="ptype">Section C</div>
+        <div class="pmarks">40</div>
+        <div class="pdesc">4 × 10 marks<br>Long derivations</div>
+      </div>
+    </div>
+    <div class="hinglish-box" style="margin-top:16px;">Section C mein sabse zyada marks hain bhai — wahan se mat bhagna! Derivation half bhi likhoge toh marks milenge 💀</div>
+  </div>
+
+  <!-- SECTION A -->
+  <div class="section-header" style="margin-top:44px;">
+    <div class="section-icon icon-blue">🔵</div>
+    <div>
+      <div class="section-title">Section A — Short Answer Questions</div>
+      <div class="section-subtitle">2 marks each · 3-4 lines kaafi hai · Easy marks mat chhodna!</div>
+    </div>
+  </div>
+
+  <!-- SA Cards -->
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">SA1</span>
+        <span class="unit-pill u1">Unit 1</span>
+        <span class="card-q">What is proper length? (Relativity)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">2 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>Length of a rod measured by an observer who is <strong>at REST</strong> relative to the rod = <strong>Proper Length (L₀)</strong>. It is the maximum possible length.</p>
+        <div class="formula-box">L = L₀ √(1 - v²/c²)</div>
+        <p>Jab rod move karti hai, toh stationary observer ko chhoti dikhti hai — this is <strong>Length Contraction</strong>. Proper length is always the longest measurement possible.</p>
+        <div class="hinglish-box">Simple word mein: apni rod ka size tabhi sahi hai jab tum uske saath khade ho! 😂</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">SA2</span>
+        <span class="unit-pill u3">Unit 3</span>
+        <span class="card-q">Two independent sources can't produce interference. Why?</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">2 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>Two independent sources cannot produce <strong>sustained interference</strong> because:</p>
+        <ul>
+          <li>They are NOT <strong>coherent</strong> — phase relationship keeps changing randomly</li>
+          <li>Frequencies and wavelengths may differ slightly</li>
+          <li>Phase changes every 10⁻⁸ seconds → fringes keep shifting → <strong>no stable pattern</strong></li>
+        </ul>
+        <div class="hinglish-box">Dono dost alag alag gaana gaayein toh harmony nahi banti — same logic! 🎵</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">SA3</span>
+        <span class="unit-pill u2">Unit 2</span>
+        <span class="card-q">State Planck's basic postulates of radiation.</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">2 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p><strong>Postulate 1:</strong> Energy of an oscillator is QUANTIZED:</p>
+        <div class="formula-box">Eₙ = nhν &nbsp;&nbsp; (n = 1, 2, 3...)</div>
+        <p><strong>Postulate 2:</strong> Energy is emitted/absorbed in discrete packets called <strong>photons</strong>:</p>
+        <div class="formula-box">ΔE = Δn · hν</div>
+        <p>Energy cannot be arbitrary — only specific discrete values are allowed. No continuous emission!</p>
+        <div class="hinglish-box">Jaise ATM se sirf 100, 200, 500 wale notes nikalte hain — energy bhi aisi hi "fixed denominations" mein aati hai 💸</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">SA4</span>
+        <span class="unit-pill u2">Unit 2</span>
+        <span class="card-q">Why is Compton effect NOT observed with visible light?</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">2 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>Maximum Compton shift = <strong>Δλ_max = 0.0486 Å ≈ 0.05 Å</strong></p>
+        <ul>
+          <li><strong>X-rays</strong> (λ ≈ 1 Å) → shift is ~5% → <strong>easily detectable ✓</strong></li>
+          <li><strong>Visible light</strong> (λ ≈ 5000 Å) → shift is only 0.001% → <strong>completely undetectable ✗</strong></li>
+        </ul>
+        <div class="tip-box"><strong>Note:</strong> Effect does exist, it's just too tiny to measure. Exam mein yahi likhna! Zyada mat socho.</div>
+        <div class="hinglish-box">Aise samjho: 1 rupee mein 5 paisa change zyada noticeable hai than 5000 rupees mein 5 paisa 😅</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">SA5</span>
+        <span class="unit-pill u5">Unit 5</span>
+        <span class="card-q">What are nanomaterials? Give properties.</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">2 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>Materials with size between <strong>1-100 nm</strong> (1 nm = 10⁻⁹ m) are called nanomaterials.</p>
+        <p><strong>Special properties due to small size:</strong></p>
+        <ul>
+          <li>Very high surface-to-volume ratio → more reactive</li>
+          <li>Copper (opaque) becomes <strong>transparent</strong> at nanoscale</li>
+          <li>Gold (solid) becomes <strong>liquid</strong> at room temperature</li>
+          <li>Aluminum becomes <strong>combustible</strong>, Platinum becomes a catalyst</li>
+        </ul>
+        <div class="hinglish-box">Properties itni badal jaati hain ki lagta hai ye alag hi element hai — size really matters bhai! 🔬</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">SA6</span>
+        <span class="unit-pill u4">Unit 4</span>
+        <span class="card-q">Define acceptance angle, acceptance cone & numerical aperture.</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">2 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <ul>
+          <li><strong>Acceptance Angle (i_max):</strong> Max angle that incident light can make with fiber axis for total internal reflection</li>
+          <li><strong>Acceptance Cone:</strong> The cone formed by rotating acceptance angle — any ray within this cone travels through fiber</li>
+          <li><strong>Numerical Aperture:</strong></li>
+        </ul>
+        <div class="formula-box">NA = sin(i_max) = √(n₁² - n₂²)</div>
+        <p>Higher NA = more light the fiber can capture = better fiber!</p>
+        <div class="hinglish-box">NA basically fiber ka "appetite" hai — kitna light khaa sakta hai woh batata hai 😄</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">SA7</span>
+        <span class="unit-pill u5">Unit 5</span>
+        <span class="card-q">What is superconductivity and critical temperature?</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">2 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p><strong>Superconductivity:</strong> When electrical resistance of a material drops <strong>SUDDENLY to ZERO</strong> below a certain temperature.</p>
+        <p><strong>Critical Temperature (Tc):</strong> Temperature below which material becomes superconducting.</p>
+        <ul>
+          <li>Mercury → Tc = 4.15 K</li>
+          <li>Aluminum → Tc = 1.19 K</li>
+        </ul>
+        <p>Below Tc: resistance = 0 &nbsp;|&nbsp; Above Tc: normal resistance</p>
+        <div class="hinglish-box">Imagine karo — electricity free mein flow ho rahi hai, koi bill nahi! That's superconductivity bhai 🤑</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">SA8</span>
+        <span class="unit-pill u2">Unit 2</span>
+        <span class="card-q">What is wave-particle duality?</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">2 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>EM radiation shows <strong>DUAL character</strong>:</p>
+        <ul>
+          <li><strong>Wave nature:</strong> Interference, Diffraction, Polarization</li>
+          <li><strong>Particle nature:</strong> Photoelectric effect, Compton effect, Black body radiation</li>
+        </ul>
+        <p>Both properties cannot be observed simultaneously. This is called <strong>wave-particle duality</strong>.</p>
+        <div class="hinglish-box">Light ek jugaadu hai — kabhi wave ban jaati hai, kabhi particle. Physics ka biggest flex! 💪</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">SA9</span>
+        <span class="unit-pill u3">Unit 3</span>
+        <span class="card-q">Why is Newton's ring centre dark in reflected light?</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">2 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>At the point of contact, air film thickness <strong>t = 0</strong>.</p>
+        <p>Light reflecting from denser medium (glass) undergoes <strong>phase change of π (180°)</strong>, equivalent to path difference of λ/2.</p>
+        <p>This causes <strong>DESTRUCTIVE interference</strong> at centre → centre appears DARK ✓</p>
+        <div class="hinglish-box">Contact point pe ekdum zero gap hai, lekin phase change ki wajah se light cancel ho jaati hai — yaar ke against ho jaate ho toh dono zero ho jaate ho 😂</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">SA10</span>
+        <span class="unit-pill u4">Unit 4</span>
+        <span class="card-q">Differences between single mode and multimode fiber.</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">2 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <div class="formula-box" style="font-family:'DM Sans',sans-serif; font-size:0.8rem; line-height:1.8;">
+          Single Mode: Core ~5 µm · One path · No dispersion · Long distances · Expensive 💸<br>
+          Multimode: Core 50-200 µm · Many paths · More dispersion · Short distances · Cheaper
+        </div>
+        <p>Single mode is better for long-distance communication (telephone networks, internet cables).</p>
+        <div class="hinglish-box">Single mode = VIP lane (fast, clean, costly) | Multimode = traffic jam wali road 🚦</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION B -->
+  <div class="section-header" style="margin-top:44px;">
+    <div class="section-icon icon-purple">🟣</div>
+    <div>
+      <div class="section-title">Section B — Medium Answer (5 Marks)</div>
+      <div class="section-subtitle">1 page each · Formula + brief derivation + conclusion</div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">B1</span>
+        <span class="unit-pill u1">Unit 1</span>
+        <span class="card-q">Time Dilation — Definition + Derivation + Real Effect</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">5 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p><strong>Definition:</strong> A moving clock runs SLOW compared to a stationary clock. This apparent slowing is called <strong>Time Dilation</strong>.</p>
+        <p><strong>Derivation:</strong> Let proper time in S' = t₀. From inverse Lorentz transform:</p>
+        <div class="formula-box">t = t₀ / √(1 - v²/c²)</div>
+        <p>Since √(1-v²/c²) &lt; 1, we get <strong>t &gt; t₀</strong> → time appears longer (dilated) to stationary observer.</p>
+        <p><strong>Real Effect — µ-meson experiment:</strong></p>
+        <ul>
+          <li>µ-mesons created 10 km above Earth, speed = 0.998c, lifetime = 2×10⁻⁶ sec</li>
+          <li>Without dilation: distance = 600 m (shouldn't reach Earth)</li>
+          <li>With dilation: t = 3.17×10⁻⁵ sec → distance = 9.5 km ✓ They DO reach Earth!</li>
+        </ul>
+        <div class="tip-box"><strong>Exam tip:</strong> µ-meson experiment likhna mat bhoolo — 2 marks pakke hain iske liye!</div>
+        <div class="hinglish-box">Moving ghadi slow chalti hai — isliye astronauts thoda kam age hote hain. Space travel = cheat code for aging! 🚀</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">B2</span>
+        <span class="unit-pill u1">Unit 1</span>
+        <span class="card-q">Relativistic Velocity Addition Theorem</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">5 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p><strong>Setup:</strong> Frame S' moves with velocity v w.r.t. S. Particle moves with u' in S'.</p>
+        <p>From Lorentz inverse transformation, dividing dx by dt:</p>
+        <div class="formula-box">u = (u' + v) / (1 + u'v/c²)</div>
+        <p><strong>Consistency check:</strong> If u' = c (light speed in S'):</p>
+        <div class="formula-box">u = (c + v)/(1 + cv/c²) = c(c+v)/(c+v) = c ✓</div>
+        <p>Speed of light is SAME in all frames — Einstein's 2nd postulate satisfied!</p>
+        <div class="hinglish-box">Classic formula — agar light bhaag rahi hai toh tum kuch bhi karo, light ki speed same rahegi. Pakad nahi sakte bhai! 😤</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">B3</span>
+        <span class="unit-pill u2">Unit 2</span>
+        <span class="card-q">Compton Effect — Derivation of Compton Shift</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">5 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p><strong>Compton Effect (1921):</strong> X-rays scatter off electrons → scattered radiation has GREATER wavelength.</p>
+        <p>Using conservation of energy and momentum (relativistic):</p>
+        <div class="formula-box">Δλ = λ' - λ = (h/m₀c)(1 - cosθ)
+where h/m₀c = 0.0243 Å = Compton wavelength</div>
+        <ul>
+          <li>At θ = 90°: Δλ = 0.0243 Å</li>
+          <li>At θ = 180°: Δλ_max = 0.0486 Å (maximum shift)</li>
+        </ul>
+        <div class="tip-box"><strong>Remember:</strong> Assumptions likhna — single photon + single electron, elastic collision, conservation holds.</div>
+        <div class="hinglish-box">Photon ne electron se takkar maari aur thoda slow ho gaya — bilkul aise jaise cycle se car se takkar ke baad tum hi slow ho jaate ho 😭</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">B4</span>
+        <span class="unit-pill u2">Unit 2</span>
+        <span class="card-q">Particle in 1D Box — Eigen Values & Eigen Functions</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">5 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>Particle trapped between x=0 and x=a, V=0 inside, V=∞ outside.</p>
+        <p>Schrödinger eq inside box: d²ψ/dx² + k²ψ = 0</p>
+        <p>Applying boundary conditions (ψ=0 at x=0 and x=a):</p>
+        <div class="formula-box">Eigen Values (Energy): Eₙ = n²h² / (8ma²)   n = 1, 2, 3...
+
+Eigen Functions: ψₙ = √(2/a) · sin(nπx/a)</div>
+        <p>Energy is <strong>QUANTIZED</strong> — particle can only have specific energy values!</p>
+        <p>n=1 → Ground state | n=2,3... → Excited states</p>
+        <div class="hinglish-box">Particle box ke andar bounce kar raha hai aur sirf kuch specific energies allowed hain — jaise flat ke andar room rent fixed hota hai, kuch bhi nahi chalega! 🏠</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">B5</span>
+        <span class="unit-pill u3">Unit 3</span>
+        <span class="card-q">Fringe Width in Wedge-Shaped Film</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">5 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>Two glass surfaces inclined at small angle θ forming a wedge of refractive index µ.</p>
+        <p>Path difference: Δ = 2µt·cos(r+θ) ± λ/2</p>
+        <p>Using geometry (t = x·tanθ) and subtracting consecutive fringe positions:</p>
+        <div class="formula-box">Fringe Width ω = λ / (2µ·sinθ)
+
+For air film (µ=1), small θ: ω = λ / (2θ)</div>
+        <ul>
+          <li>Fringe width ∝ λ (more wavelength = wider fringes)</li>
+          <li>Fringe width ∝ 1/θ (sharper wedge = narrower fringes)</li>
+        </ul>
+        <div class="hinglish-box">Jitna zyada angle, utne tight fringes — jaise zoom in/out karte ho photo mein 📸</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">B6</span>
+        <span class="unit-pill u3">Unit 3</span>
+        <span class="card-q">Fresnel vs Fraunhofer Diffraction — Compare</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">5 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <div class="formula-box" style="font-family:'DM Sans',sans-serif; font-size:0.8rem; line-height:2;">
+Fresnel: Finite distance · Spherical/cylindrical wavefront · No lens · Zone plates · Centre can be dark<br>
+Fraunhofer: Infinite distance · Plane wavefront · Lens needed · Single slit/grating · Centre ALWAYS bright
+        </div>
+        <div class="tip-box"><strong>Exam trick:</strong> Fraunhofer mein ALWAYS bright centre hota hai — ye yaad rakh, easy marks!</div>
+        <div class="hinglish-box">Fresnel = jugaadu setup, koi lens nahi · Fraunhofer = proper lab setup, sab perfect 🔭</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">B7</span>
+        <span class="unit-pill u4">Unit 4</span>
+        <span class="card-q">Acceptance Angle & Numerical Aperture — Derivation</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">5 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>Core (n₁) + Cladding (n₂), n₁ > n₂. Using Snell's law at fiber end and critical angle condition:</p>
+        <div class="formula-box">sin(i_max) = √(n₁² - n₂²) / n₀
+
+For air (n₀=1):
+NA = sin(i_max) = √(n₁² - n₂²)</div>
+        <p><strong>Acceptance Cone:</strong> Full cone of half-angle i_max. Any ray within this cone propagates.</p>
+        <p>Higher NA = more light accepted = better fiber!</p>
+        <div class="hinglish-box">Acceptance angle = fiber ka "welcome zone" — iske bahar wale rays ko bhaga diya jaata hai 🚪</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">B8</span>
+        <span class="unit-pill u5">Unit 5</span>
+        <span class="card-q">Meissner Effect + Type I vs Type II Superconductors</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">5 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p><strong>Meissner Effect (1933):</strong> When cooled below Tc, superconductor EXPELS all magnetic field from interior. B = 0 inside → perfect diamagnetism (χ = -1).</p>
+        <p>This CANNOT be explained by zero resistance alone — it's an independent property!</p>
+        <div class="formula-box" style="font-family:'DM Sans',sans-serif; font-size:0.8rem; line-height:2;">
+Type I (Soft): One critical field Hc · Complete Meissner · Al, Hg, Zn · Limited use
+Type II (Hard): Two fields Hc1 & Hc2 · Mixed state exists · Nb-Ti alloy · MRI, Maglev trains
+        </div>
+        <div class="hinglish-box">Type II = zyada tolerant hai, thodi magnetic field allow karta hai mixed state mein — real life mein kaam aata hai bhai 🏥</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION C -->
+  <div class="section-header" style="margin-top:44px;">
+    <div class="section-icon icon-green">🟢</div>
+    <div>
+      <div class="section-title">Section C — Long Answer (10 Marks)</div>
+      <div class="section-subtitle">2-3 pages each · Full derivations · Diagrams bahut important hain!</div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">C1</span>
+        <span class="unit-pill u1">Unit 1</span>
+        <span class="card-q">Michelson-Morley Experiment — Full Theory + Result + Explanations</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">10 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p><strong>Objective:</strong> Detect Earth's motion through hypothetical ETHER medium.</p>
+        <p><strong>Setup:</strong> Source → Partially silvered plate P at 45° → Mirrors M₁ (perpendicular) & M₂ (along motion) at equal distance l → Telescope T</p>
+        <div class="tip-box"><strong>Draw this diagram!</strong> It carries 2-3 marks guaranteed. Label: Source S, plate P, mirrors M₁ M₂, telescope T.</div>
+        <p><strong>Time Calculations:</strong></p>
+        <div class="formula-box">Arm parallel to motion:    t₁ = (2l/c) · 1/(1-v²/c²)
+Arm perpendicular:        t₂ = (2l/c) · 1/√(1-v²/c²)
+
+Expected fringe shift: Δn = 2lv²/(c²λ) ≈ 0.4 fringes</div>
+        <p><strong>Result:</strong> ZERO shift observed! Experiment repeated many times — always ZERO.</p>
+        <p><strong>Conclusion:</strong> Earth's motion through ether CANNOT be detected. Ether concept is WRONG.</p>
+        <p><strong>Explanations of Negative Result:</strong></p>
+        <ul>
+          <li><strong>Ether-Drag Hypothesis:</strong> Earth drags ether → no relative motion (later disproved)</li>
+          <li><strong>Fitzgerald-Lorentz Contraction:</strong> Moving objects contract by √(1-v²/c²)</li>
+          <li><strong>Einstein's Hypothesis (BEST):</strong> Speed of light = constant c in ALL inertial frames → no ether needed → basis of Special Relativity ✓</li>
+        </ul>
+        <div class="hinglish-box">Poora experiment ether dhoondhne ke liye kiya, mila kuch nahi — aur isi "failure" se Einstein ki duniya badal gayi! 🎉</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">C2</span>
+        <span class="unit-pill u1">Unit 1</span>
+        <span class="card-q">Einstein's Mass-Energy Relation E = mc² + Energy-Momentum Relation</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">10 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>Start with relativistic mass: m = m₀/√(1-v²/c²)</p>
+        <p>Work done = KE: dK = F·ds = mv·dv + v²·dm</p>
+        <p>From differentiation: mv·dv = (c²-v²)dm</p>
+        <p>Substituting: dK = c²·dm</p>
+        <p>Integrating from m₀ to m:</p>
+        <div class="formula-box">K = (m - m₀)c²
+
+Total Energy = KE + Rest Energy:
+E = K + m₀c²
+
+∴ E = mc²  ← Einstein's Mass-Energy Relation ✓</div>
+        <p><strong>Physical meaning:</strong> Mass and energy are interconvertible! At rest: E₀ = m₀c²</p>
+        <p><strong>Relativistic Energy-Momentum Relation:</strong></p>
+        <div class="formula-box">E² = p²c² + m₀²c⁴  ← Very important!
+
+For photon (m₀=0): E = pc → photons carry momentum!</div>
+        <div class="hinglish-box">E = mc² — duniya ki sabse famous equation, Einstein ne ek formula mein sab bata diya. Nuclear bomb bhi isi se samjhte hain ☢️</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">C3</span>
+        <span class="unit-pill u2">Unit 2</span>
+        <span class="card-q">Schrödinger Time-Dependent Wave Equation + Physical Significance of Ψ</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">10 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>Start with plane wave: Ψ(x,t) = A·e^[-(2πi/h)(Et-px)]</p>
+        <p>Differentiate twice w.r.t. x → get p². Differentiate once w.r.t. t → get E.</p>
+        <p>Substitute in total energy E = p²/2m + V:</p>
+        <div class="formula-box">-(ℏ²/2m) · ∂²Ψ/∂x² + VΨ = iℏ · ∂Ψ/∂t
+
+← Schrödinger Time-Dependent Equation ✓
+
+In 3D: HΨ = EΨ  (Hamiltonian form)</div>
+        <p><strong>Time-Independent form:</strong> ∇²ψ + (2m/ℏ²)(E-V)ψ = 0</p>
+        <p><strong>Physical Significance of Wave Function Ψ:</strong></p>
+        <ul>
+          <li>Ψ itself has no direct physical meaning</li>
+          <li><strong>|Ψ|² = probability density</strong> (Max Born's interpretation)</li>
+          <li>|Ψ|² dτ = probability of finding particle in volume element dτ</li>
+          <li><strong>Normalization:</strong> ∫|Ψ|²dV = 1 (particle must be SOMEWHERE)</li>
+          <li>Ψ must be: single-valued, finite, continuous, normalizable</li>
+        </ul>
+        <div class="hinglish-box">Ψ khud kuch nahi batata, |Ψ|² batata hai "particle kahan milega ka chance" — quantum mein sab probability hai bhai, certainty kuch nahi! 🎲</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">C4</span>
+        <span class="unit-pill u3">Unit 3</span>
+        <span class="card-q">Newton's Rings — Theory + Ring Diameter Derivations</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">10 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p><strong>Setup:</strong> Plano-convex lens on flat glass plate. Monochromatic light → interference rings seen in microscope.</p>
+        <p><strong>Why circular rings?</strong> Air film has same thickness in all directions at same distance → circular symmetry ✓</p>
+        <p><strong>Centre is DARK</strong> because at t=0, path diff = λ/2 (due to phase change) → destructive ✓</p>
+        <p><strong>Geometry:</strong> r² = 2Rt (from Pythagoras, t &lt;&lt; R)</p>
+        <div class="formula-box">Bright Rings: Dₙ = √[2(2n-1)λR] ∝ √(odd natural numbers)
+                    D ∝ √1, √3, √5, √7 ...
+
+Dark Rings: Dₙ = √(4nλR) ∝ √n
+            D ∝ √1, √2, √3, √4 ...</div>
+        <p><strong>Application:</strong> Find wavelength of light or radius of curvature:</p>
+        <div class="formula-box">R = Dₙ² / (4nλ)</div>
+        <div class="hinglish-box">Newton ne dekha soap bubble pe rings aur physics nikaal di — aise hi Newton hote hain! Humne bus padhni hai 😭</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">C5</span>
+        <span class="unit-pill u3">Unit 3</span>
+        <span class="card-q">Fraunhofer Diffraction at Single Slit + Prove I₁ = 4.5% of I_max</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">10 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>Parallel light → slit (width e) → diffracted → screen</p>
+        <p>Let total phase = 2α, then resultant amplitude:</p>
+        <div class="formula-box">R = A · sinα/α     →     I = A² · sin²α/α²</div>
+        <p><strong>Minima</strong> (I=0): sinα = 0 → α = ±mπ → e·sinθ = ±mλ (m=1,2,3...)</p>
+        <p><strong>Maxima</strong>: α = tanα → solutions at α = 0, ±3π/2, ±5π/2...</p>
+        <div class="formula-box">At α=0 (Principal max): I_max = A²
+
+At α=3π/2 (1st secondary max):
+I₁ = A² · [sin(3π/2)/(3π/2)]² = A² · 4/(9π²)
+
+Ratio: I₁/I_max = 4/(9π²) ≈ 0.045 = 4.5% ✓</div>
+        <p><strong>Width of central maximum</strong> = 2λD/e (twice any secondary max)</p>
+        <div class="tip-box"><strong>Exam guaranteed:</strong> "Prove I₁ = 4.5% of I_max" — ye question almost har saal aata hai!</div>
+        <div class="hinglish-box">Central band sabse bright aur bada hota hai — baki sab secondary hain, jaise class mein ek topper baki sab average 😂</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">C6</span>
+        <span class="unit-pill u4">Unit 4</span>
+        <span class="card-q">Ruby Laser — Construction, Working, Energy Levels, Drawbacks</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">10 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p><strong>First laser by Maiman (1960)</strong> — solid state, pulsed, <strong>3-level laser system</strong></p>
+        <p><strong>Active Material:</strong> Cr³⁺ (Chromium) ions in Al₂O₃ crystal doped with 0.05% Cr₂O₃</p>
+        <p><strong>Construction:</strong></p>
+        <ul>
+          <li>Pink ruby rod (cylindrical, 2-20 cm long)</li>
+          <li>One end: fully silvered (total reflector)</li>
+          <li>Other end: partially silvered (output window)</li>
+          <li>Surrounded by helical xenon flash tube (optical pump)</li>
+        </ul>
+        <div class="tip-box"><strong>Draw:</strong> Ruby rod in center, flash tube coiled around, silvered ends, laser output arrow. 3 marks for diagram!</div>
+        <p><strong>Working (4 steps):</strong></p>
+        <ul>
+          <li><strong>Pumping E₁→E₃:</strong> Flash tube emits 5500 Å green light → Cr³⁺ absorbs → jumps to E₃</li>
+          <li><strong>Radiationless E₃→E₂:</strong> Quick fall to metastable E₂ (lifetime 10⁻³ s), heat given to lattice</li>
+          <li><strong>Population Inversion:</strong> E₂ accumulates ions → inversion between E₂ and E₁</li>
+          <li><strong>Stimulated Emission E₂→E₁:</strong> Spontaneous photon triggers identical 6943 Å photons → laser output</li>
+        </ul>
+        <p><strong>Drawbacks:</strong></p>
+        <ul>
+          <li>Very HIGH pumping power needed (&gt;50% atoms must be excited)</li>
+          <li>Only green component of pump light is useful → low efficiency</li>
+          <li>Output is PULSED (not continuous)</li>
+          <li>Generates heat affecting performance</li>
+        </ul>
+        <div class="hinglish-box">3-level laser mein ground state se excited state pump karna padta hai — zyada mehnat! 4-level laser zyada efficient hoti hai, woh alag question hai 😅</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">C7</span>
+        <span class="unit-pill u5">Unit 5</span>
+        <span class="card-q">Superconductivity — Meissner Effect, Type I vs II, Critical Field</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">10 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p>Below Tc, resistance drops to ZERO suddenly. Different Tc values:</p>
+        <div class="formula-box">Hg→4.15K · Pb→7.2K · Nb₃Al→17.5K
+
+Critical Field Formula: Hc(T) = Hc(0)[1 - (T/Tc)²]</div>
+        <p>At T=0: max Hc. At T=Tc: Hc=0. Graph is parabolic.</p>
+        <p><strong>Meissner Effect:</strong> Below Tc, superconductor EXPELS all magnetic flux → B=0 inside → perfect diamagnet (χ=-1)</p>
+        <p><strong>Two independent properties</strong> of superconductors:</p>
+        <ul>
+          <li>Zero resistance (R=0)</li>
+          <li>Perfect diamagnetism (Meissner effect) — these are SEPARATE!</li>
+        </ul>
+        <div class="formula-box" style="font-family:'DM Sans',sans-serif; font-size:0.8rem; line-height:2;">
+Type I (Soft): One Hc, complete Meissner, Al/Zn/Hg, limited apps
+Type II (Hard): Two fields Hc1 & Hc2, mixed vortex state, Nb-Ti alloy, MRI/Maglev
+        </div>
+        <div class="tip-box"><strong>Draw:</strong> B vs H graph for Type I and Type II — shows complete and partial Meissner effect.</div>
+        <div class="hinglish-box">Type II wale MRI machine mein kaam aate hain — isiliye doctor itne expensive tests charge karte hain! Superconductor ki wajah se 😂</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" onclick="toggle(this)">
+    <div class="card-header">
+      <div class="card-title-wrap">
+        <span class="card-num">C8</span>
+        <span class="unit-pill u5">Unit 5</span>
+        <span class="card-q">Top-Down & Bottom-Up Approaches + CVD Method for Nanomaterials</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <span class="card-marks">10 marks</span>
+        <div class="chevron">▼</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="answer-text">
+        <p><strong>Nanomaterials:</strong> At least one dimension in 1-100 nm range.</p>
+        <p><strong>1. Top-Down Approach:</strong> Start with bulk → break DOWN to nanoscale</p>
+        <ul>
+          <li>Techniques: Lithography, ball milling, etching, laser ablation</li>
+          <li>Analogy: <em>Carving a statue from rock</em></li>
+          <li>Disadvantage: Non-uniform size, may introduce defects</li>
+        </ul>
+        <p><strong>2. Bottom-Up Approach:</strong> Build atom by atom UP from smallest units</p>
+        <ul>
+          <li>Techniques: CVD, Sol-Gel, chemical synthesis</li>
+          <li>Analogy: <em>Building a wall brick by brick</em></li>
+          <li>Advantage: Better control of size and structure</li>
+        </ul>
+        <p><strong>CVD (Chemical Vapor Deposition) — Bottom-Up:</strong></p>
+        <div class="formula-box">Steps:
+1. Substrate + metal catalyst (Ni/Co/Fe)
+2. Heat to ~700°C
+3. Blow CH₄ (carbon source) + NH₃/H₂ (process gas)
+4. High temp breaks C-H bonds → free carbon atoms
+5. Carbon bonds with catalyst → forms nanotubes (CNT)</div>
+        <p>Produces <strong>SWNT</strong> (single wall) and <strong>MWNT</strong> (multi wall) carbon nanotubes.</p>
+        <p><strong>Quantum Structures:</strong> Quantum Well (1D reduced) | Quantum Wire (2D) | Quantum Dot (3D)</p>
+        <div class="tip-box"><strong>Draw CVD setup:</strong> Quartz tube + gas inlet/outlet + sample on quartz boat + oven. 2-3 marks!</div>
+        <div class="hinglish-box">Bottom-up = Minecraft style building 🧱 | Top-down = Minecraft mein TNT se blast karna 💥 — physics mein dono kaam aate hain!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIPS -->
+  <div class="section-header" style="margin-top:44px;">
+    <div class="section-icon icon-amber">💡</div>
+    <div>
+      <div class="section-title">Exam Strategy — Score 50-55 Marks</div>
+      <div class="section-subtitle">Ye tips follow karo, result pakka aayega!</div>
+    </div>
+  </div>
+
+  <div class="glass" style="padding:22px; margin-bottom:20px;">
+    <table class="strat-table">
+      <tr>
+        <th>Section</th>
+        <th>Target</th>
+        <th>Strategy</th>
+      </tr>
+      <tr>
+        <td><strong>Section A</strong></td>
+        <td style="color:#34d399; font-weight:600;">8-10 marks</td>
+        <td>Attempt all 5. 3-4 lines each. Bullet points use karo. Easy marks!</td>
+      </tr>
+      <tr>
+        <td><strong>Section B</strong></td>
+        <td style="color:#34d399; font-weight:600;">15-18 marks</td>
+        <td>Attempt all 4. Definition + formula + brief explanation. 1 page each.</td>
+      </tr>
+      <tr>
+        <td><strong>Section C</strong></td>
+        <td style="color:#34d399; font-weight:600;">27-30 marks</td>
+        <td>Attempt all 4. Diagram → Derivation → Result. 2-3 pages each.</td>
+      </tr>
+      <tr>
+        <td><strong>Total</strong></td>
+        <td style="color:#0af; font-weight:700; font-size:1rem;">50-58 marks</td>
+        <td>Very achievable! Focus on 8 long questions above. 🎯</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="tips-grid">
+    <div class="tip-card">
+      <div class="tip-icon">✍️</div>
+      <div class="tip-title">Never Leave Blank</div>
+      <div class="tip-desc">Kuch bhi likho — partial marks milte hain. Blank = zero guaranteed.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">📐</div>
+      <div class="tip-title">Formula = Free Marks</div>
+      <div class="tip-desc">Derivation galat ho toh bhi formula sahi likhne pe marks milte hain!</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🎨</div>
+      <div class="tip-title">Draw Diagrams</div>
+      <div class="tip-desc">MM Experiment, Newton's Rings, Ruby Laser, Fiber, Single Slit — 2-3 marks each!</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div style="margin-bottom:8px;">Made with ❤️ by <span class="made-by">obsidianghost404</span></div>
+  <div style="font-size:0.75rem; color:rgba(240,244,255,0.3);">Engineering Physics PUE Guide · MAS101/MAS201 · Session 2025-26 · MIET</div>
+  <div style="font-size:0.72rem; color:rgba(240,244,255,0.2); margin-top:6px;">Study hard, bhai — ek din sab theek ho jaayega 🙏</div>
+</footer>
+
+<script>
+function toggle(card) {
+  card.classList.toggle('open');
+}
+// Open first card by default
+document.querySelector('.card').classList.add('open');
+</script>
+</body>
+</html>
